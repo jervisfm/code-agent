@@ -131,23 +131,10 @@ jobs:
           GOARCH: arm64
         run: go build -v -o agent_android_arm64 .
 
-      - name: Build for Android ARMv7
-        env:
-          GOOS: android
-          GOARCH: arm
-          GOARM: 7
-        run: go build -v -o agent_android_armv7 .
-
       - name: Upload Android ARM64 Binary
         uses: softprops/action-gh-release@v1
         with:
           files: ./agent_android_arm64
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Android ARMv7 Binary
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./agent_android_armv7
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # Build for iOS
@@ -163,12 +150,14 @@ jobs:
         with:
           go-version: '1.21'
           cache: true
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
 
-      - name: Build for iOS ARM64
-        env:
-          GOOS: ios
-          GOARCH: arm64
-        run: go build -v -o agent_ios_arm64 .
+      - name: Build for iOS ARM64 using gomobile
+        run: gomobile build -target=ios -o agent_ios_arm64  .
+
 
       - name: Upload iOS ARM64 Binary
         uses: softprops/action-gh-release@v1
