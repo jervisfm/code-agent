@@ -10,14 +10,14 @@ import (
 )
 
 type Agent struct {
-	client          *anthropic.Client
-	getUserMesssage func() (string, bool)
+	client         *anthropic.Client
+	getUserMessage func() (string, bool)
 }
 
 func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool)) *Agent {
 	return &Agent{
 		client:         client,
-		getUserMessage: getUserMesssage,
+		getUserMessage: getUserMessage,
 	}
 }
 
