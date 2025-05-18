@@ -22,7 +22,7 @@ func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool)) *A
 }
 
 func (agent *Agent) Run(ctx context.Context) error {
-	conversation := []anthropic.MesssgeParam{}
+	conversation := []anthropic.MessageParam{}
 
 	fmt.Println("Chat with Claude AI Agent (use 'Ctrl-C' to quit)")
 	for {
