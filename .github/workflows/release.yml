@@ -1,0 +1,201 @@
+name: Release Go Binaries
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  # Build for standard desktop platforms
+  build-desktop:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            output_name: app_linux_amd64
+            asset_name: app_linux_amd64
+          - os: windows-latest
+            output_name: app_windows_amd64.exe
+            asset_name: app_windows_amd64.exe
+          - os: macos-latest
+            output_name: app_darwin_amd64
+            asset_name: app_darwin_amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build
+        run: go build -v -o ${{ matrix.output_name }} .
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./${{ matrix.output_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream
+
+  # Build for macOS ARM (Apple Silicon)
+  build-mac-arm:
+    name: Build for macOS ARM
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+        run: go build -v -o app_darwin_arm64 .
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_darwin_arm64
+          asset_name: app_darwin_arm64
+          asset_content_type: application/octet-stream
+
+  # Build for Linux ARM
+  build-linux-arm:
+    name: Build for Linux ARM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build for ARM64
+        env:
+          GOOS: linux
+          GOARCH: arm64
+        run: go build -v -o app_linux_arm64 .
+
+      - name: Build for ARM v7
+        env:
+          GOOS: linux
+          GOARCH: arm
+          GOARM: 7
+        run: go build -v -o app_linux_armv7 .
+
+      - name: Upload ARM64 Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_linux_arm64
+          asset_name: app_linux_arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload ARMv7 Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_linux_armv7
+          asset_name: app_linux_armv7
+          asset_content_type: application/octet-stream
+
+  # Build for Android
+  build-android:
+    name: Build for Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build for Android ARM64
+        env:
+          GOOS: android
+          GOARCH: arm64
+        run: go build -v -o app_android_arm64 .
+
+      - name: Build for Android ARMv7
+        env:
+          GOOS: android
+          GOARCH: arm
+          GOARM: 7
+        run: go build -v -o app_android_armv7 .
+
+      - name: Upload Android ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_android_arm64
+          asset_name: app_android_arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Android ARMv7 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_android_armv7
+          asset_name: app_android_armv7
+          asset_content_type: application/octet-stream
+
+  # Build for iOS
+  build-ios:
+    name: Build for iOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build for iOS ARM64
+        env:
+          GOOS: ios
+          GOARCH: arm64
+        run: go build -v -o app_ios_arm64 .
+
+      - name: Upload iOS ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./app_ios_arm64
+          asset_name: app_ios_arm64
+          asset_content_type: application/octet-stream
