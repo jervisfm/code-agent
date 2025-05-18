@@ -14,4 +14,13 @@ export CLAUDE_API_KEY=your_api_key
 
 # Usage
 
+## Once set up
+Initial set up.
+```bash
+sudo apt-get install golang
+go get
+go build
+```
+
+## Main Command
 go run agent
