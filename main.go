@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/invopop/jsonschema"
@@ -28,6 +29,10 @@ type ReadFileInput struct {
 	Path string `json:"path" jsonschema_description:"The relative path of a file in the working directory."`
 }
 
+type ListFilesInput struct {
+	Path string `json:"path,omitempty" jsonschema_description:"Optional relative path to list files from. Defaults to current directory if not provided."`
+}
+
 func ReadFile(input json.RawMessage) (string, error) {
 	readFileInput := ReadFileInput{}
 	err := json.Unmarshal(input, &readFileInput)
@@ -40,6 +45,51 @@ func ReadFile(input json.RawMessage) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+func ListFiles(input json.RawMessage) (string, error) {
+	listFilesInput := ListFilesInput{}
+	err := json.Unmarshal(input, &listFilesInput)
+	if err != nil {
+		panic(err)
+	}
+
+	dir := "."
+	if listFilesInput.Path != "" {
+		dir = listFilesInput.Path
+	}
+
+	var files []string
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+
+		}
+		relativePath, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+
+		if relativePath != "." {
+			if info.IsDir() {
+				files = append(files, relativePath+"/")
+			} else {
+				files = append(files, relativePath)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	result, err := json.Marshal(files)
+	if err != nil {
+		return "", err
+	}
+	return string(result), nil
 }
 
 func GenerateSchema[T any]() anthropic.ToolInputSchemaParam {
@@ -62,6 +112,15 @@ var ReadFileDefinition = ToolDefinition{
 	Description: "Read the contents of a given relative file path. Use this when you want to see what's inside a file. Do not use this with directory names.",
 	InputSchema: ReadFileInputSchema,
 	Function:    ReadFile,
+}
+
+var ListFilesInputSchema = GenerateSchema[ListFilesInput]()
+
+var ListFilesDefinition = ToolDefinition{
+	Name:        "list_files",
+	Description: "List files and direcotries at a given path. If no path is provided, lists files in the current directory.",
+	InputSchema: ListFilesInputSchema,
+	Function:    ListFiles,
 }
 
 func NewAgent(
@@ -174,7 +233,7 @@ func main() {
 		return scanner.Text(), true
 	}
 
-	tools := []ToolDefinition{ReadFileDefinition}
+	tools := []ToolDefinition{ReadFileDefinition, ListFilesDefinition}
 	agent := NewAgent(&client, getUserMessage, tools)
 	err := agent.Run(context.TODO())
 	if err != nil {
