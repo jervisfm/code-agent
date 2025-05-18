@@ -41,9 +41,9 @@ func (agent *Agent) Run(ctx context.Context) error {
 		}
 		conversation = append(conversation, message.ToParam())
 
-		for _, content := message.Content {
+		for _, content := range message.Content {
 			switch content.Type {
-			case anthropic.MessageTypeText:
+			case "text":
 				fmt.Printf("\u001b[93mClaude\u001b[0m: %s\n", content.Text)
 			}
 		}
