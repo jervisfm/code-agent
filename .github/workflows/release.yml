@@ -156,7 +156,7 @@ jobs:
           gomobile init
 
       - name: Build for iOS ARM64 using gomobile
-        run: gomobile build -target=ios -o agent_ios_arm64  .
+        run: gomobile build -target=ios -o agent_ios_arm64 -bundleid=com.jmuindi.agent .
 
 
       - name: Upload iOS ARM64 Binary
