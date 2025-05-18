@@ -21,6 +21,15 @@ func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool)) *A
 	}
 }
 
+func (agent *Agent) runInference(ctx context.Context, conversation []anthropic.MessageParam) (*anthropic.Message, error) {
+	message, err := agent.client.Messages.New(ctx, anthropic.MessageNewParams{
+		Messages:  conversation,
+		MaxTokens: int64(1024),
+		Model:     anthropic.ModelClaude3_7SonnetLatest,
+	})
+	return message, err
+}
+
 func (agent *Agent) Run(ctx context.Context) error {
 	conversation := []anthropic.MessageParam{}
 
